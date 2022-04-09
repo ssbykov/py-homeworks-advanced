@@ -7,7 +7,7 @@ def add_dict(contact):
         contact[:len(contact[0].split())] = contact[0].split(' ')
     elif contact[2] == '': 
         contact[1:1 + len(contact[1].split())] = contact[1].split(' ')
-    #формирование словаля с контактами
+    #формирование словаря с контактами
     key_contact = ' '.join(contact[:2])
     if contact[5]:
         format_phone()
