@@ -20,8 +20,9 @@ def add_dict(contact):
                 contacts_dic[key_contact][i] = contact[i] 
 
 def format_phone():
-    contact[5] = re.sub(r'(\s+)?\(?(доб.)(\s+)?(\d+)\)?', r' доб.\4', contact[5])
-    contact[5] = re.sub(r'(\+7|8)\s?\(?(\d{3})\)?[\s-]?((\d{3}))[\s-]?((\d{2}))[\s-]?((\d{2}))', r'+7(\2)\4-\6-\8', contact[5])
+    # contact[5] = re.sub(r'(\s+)?\(?(доб.)(\s+)?(\d+)\)?', r' доб.\4', contact[5])
+    # contact[5] = re.sub(r'(\+7|8)\s?\(?(\d{3})\)?[\s-]?((\d{3}))[\s-]?((\d{2}))[\s-]?((\d{2}))', r'+7(\2)\4-\6-\8', contact[5])
+    contact[5] = re.sub(r'(\+7|8)?\s*\(?(\d{3})\)?[\s-]?((\d{3}))[\s-]?((\d{2}))[\s-]?(\d{2})(\s*)\(?(доб.)?\s*(\d+)?\)?', r'+7(\2)\4-\6-\7\8\9\10', contact[5])
 
 if __name__ == '__main__':
     with open("phonebook_raw.csv", encoding='utf-8') as f:
