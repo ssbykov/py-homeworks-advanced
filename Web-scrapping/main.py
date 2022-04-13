@@ -6,7 +6,7 @@ def find_preview(url, page_num, keywords, headers):
     soup = get_request(url + str(page_num), headers)
     articls = soup.find_all(class_='tm-article-snippet')
     for article in articls:
-        txt_set = set(_.lstrip('*') for _ in article.text.split())
+        txt_set = set(_.lstrip('*').lower() for _ in article.text.split())
         search_ref = article.find(class_='tm-article-snippet__readmore')
         article_url = 'https://habr.com' + search_ref.attrs['href']
         if keywords & txt_set: 
@@ -31,7 +31,7 @@ def get_request(url, headers):
 def find_article(url, keywords, headers):
     soup = get_request(url, headers)
     article = soup.find(id='post-content-body')
-    txt_set = set(_.lstrip('*') for _ in article.text.split())
+    txt_set = set(_.lstrip('*').lower() for _ in article.text.split())
     if keywords & txt_set:
         return 'В тексте статьи найдены слова: ' + str(keywords & txt_set)  
 
