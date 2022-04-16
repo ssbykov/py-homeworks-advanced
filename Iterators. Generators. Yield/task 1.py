@@ -20,15 +20,6 @@ class FlatIterator:
         self.cursor += 1        
         return self.el
 
-
-def flat_iterator(nested_list):
-    for el in nested_list:
-        if str(type(el)) == "<class 'list'>":
-            ind = nested_list.index(el) 
-            nested_list = nested_list[:ind] + nested_list[ind] + nested_list[ind + 1:] 
-            return flat_iterator(nested_list)
-    return nested_list
-
 if __name__ == '__main__':
     for _ in FlatIterator(nested_list):
         print(_)
