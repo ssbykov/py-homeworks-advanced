@@ -11,7 +11,6 @@ def flat_generator(nested_list):
         else:
             yield el
 
-
 if __name__ == '__main__':
     for item in  flat_generator(nested_list):
         print(item)
