@@ -9,7 +9,7 @@ class FlatIterator:
         self.values = values
 
     def __iter__(self):
-        self.new_list = self._flat_iterator(self.values)
+        self.new_list = self._flat_iterator(self.values, [])
         self.cursor = 0
         return self
 
@@ -20,17 +20,17 @@ class FlatIterator:
         self.cursor += 1        
         return self.el
 
-    def _flat_iterator(self, nested_list):
+    def _flat_iterator(self, nested_list, new_list):
         for el in nested_list:
             if isinstance(el, list):
-                ind = nested_list.index(el) 
-                nested_list = nested_list[:ind] + nested_list[ind] + nested_list[ind + 1:] 
-                return self._flat_iterator(nested_list)
-        return nested_list
+                self._flat_iterator(el, new_list)
+            else:
+                new_list.append(el)
+        return new_list
 
 if __name__ == '__main__':
-    for _ in FlatIterator(nested_list):
-        print(_)
+    for item in FlatIterator(nested_list):
+        print(item)
     flat_list = [item for item in FlatIterator(nested_list)]
     print(flat_list)
     
