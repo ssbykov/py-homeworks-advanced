@@ -28,9 +28,16 @@ class FlatIterator:
                 new_list.append(el)
         return new_list
 
+def flat_iterator(nested_list):
+    for el in nested_list:
+        if isinstance(el, list):
+            yield from flat_iterator(el)
+        else:
+            yield el
+
 if __name__ == '__main__':
-    for item in FlatIterator(nested_list):
+    for item in iter(flat_iterator(nested_list)):
         print(item)
-    flat_list = [item for item in FlatIterator(nested_list)]
+    flat_list = [item for item in iter(flat_iterator(nested_list))]
     print(flat_list)
     
