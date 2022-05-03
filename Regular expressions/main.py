@@ -2,7 +2,7 @@ import csv
 import re
 
 def add_dict(contact):
-    #обработка полей ФИО
+    # обработка полей ФИО
     if contact[1:3] == ['', '']:
         contact[:len(contact[0].split())] = contact[0].split(' ')
     elif contact[2] == '': 
