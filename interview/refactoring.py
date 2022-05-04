@@ -34,7 +34,9 @@ class Mail:
         mail.select("inbox")
         criterion = '(HEADER Subject "%s")' % header if header else 'ALL'
         result, data = mail.uid('search', None, criterion)
-        assert data[0], 'There are no letters with current header'
+        if not data[0]:
+            print('There are no letters with current header')
+            return
         latest_email_uid = data[0].split()[-1]
         result, data = mail.uid('fetch', latest_email_uid, '(RFC822)')
         raw_email = str(data[0][1])
