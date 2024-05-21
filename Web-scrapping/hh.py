@@ -15,8 +15,19 @@ search_txt = 'python django flask'
 class HH:
     HOST = "https://spb.hh.ru/search/vacancy"
 
-    def __init__(self):
+    def __init__(
+            self,
+            vacancy_tag="serp-item serp-item_simple serp-item_link serp-item-redesign",
+            salary_tag="compensation-text--cCPBXayRjn5GuLFWhGTJ fake-magritte-primary-text--qmdoVdtVX3UWtBb3Q7Qj "
+                       "separate-line-on-xs--pwAEUI79GJbGDu97czVC",
+            employer_tag="vacancy-name--SYbxrgpHgHedVTkgI_cA serp-item__title-link serp-item__title-link_redesign",
+            address_tag="vacancy-serp__vacancy-address"
+    ):
         self.headers = Headers(browser='chrome', os='win').generate()
+        self.vacancy_tag = vacancy_tag,
+        self.salary_tag = salary_tag
+        self.employer_tag = employer_tag
+        self.address_tag = address_tag
 
     def get_vacancy(self, search_tags, areas=('1',)):
         page = 0
@@ -30,21 +41,18 @@ class HH:
                 'items_on_page': '20',
             }
             vacancy_html = requests.get(self.HOST, headers=self.headers, params=params).text
-            vacancy_list_pars_all = bs(vacancy_html, features='lxml').find_all(class_="vacancy-serp-item__layout")
+            vacancy_list_pars_all = bs(vacancy_html, features='lxml').find_all(class_=self.vacancy_tag)
             if vacancy_list_pars_all:
                 for vacancy in vacancy_list_pars_all:
-                    h2 = vacancy.find('h2', {'data-qa': 'bloko-header-2'})
-                    salary = ''
-                    if vacancy.find('span', class_='bloko-header-section-3'):
-                        salary = vacancy.find('span', class_='bloko-header-section-3').get_text()
-                    employer = vacancy.find(class_="vacancy-serp-item__meta-info-company").text
-                    address = list(vacancy.find(class_="vacancy-serp-item__info").children)[1].text
+                    is_salary = vacancy.find('span', class_=self.salary_tag)
+                    salary = normalize('NFKD', is_salary.get_text()) if is_salary else ""
+                    employer = normalize('NFKD', vacancy.find(class_=self.employer_tag).text)
+                    address = normalize('NFKD', vacancy.find('span', {"data-qa": self.address_tag}).text)
                     vacancy_lst.append(
                         {'href': vacancy.find('a', target="_blank").attrs.get("href"),
-                         'employer': normalize('NFKD', employer),
-                         'salary': normalize('NFKD', salary),
-                         'address': normalize('NFKD', address)
-
+                         'employer': employer,
+                         'salary': salary,
+                         'address': address
                          }
                     )
                 page += 1
