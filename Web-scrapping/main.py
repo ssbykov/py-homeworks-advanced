@@ -1,67 +1,67 @@
+# https://github.com/netology-code/py-homeworks-advanced/tree/new_hw_scrapping/6.Web-scrapping
+
+from pprint import pprint
+
 import requests
-from bs4 import BeautifulSoup
-import sys
+from unicodedata import normalize
+from bs4 import BeautifulSoup as bs
+from fake_headers import Headers
+import json
 
-def find_preview(url, page_num, keywords, headers):
-    soup = get_request(url + str(page_num), headers)
-    articls = soup.find_all(class_='tm-article-snippet')
-    for article in articls:
-        txt_set = set(_.lstrip('*').lower() for _ in article.text.split())
-        search_ref = article.find(class_='tm-article-snippet__readmore')
-        article_url = 'https://habr.com' + search_ref.attrs['href']
-        if keywords & txt_set: 
-            print_article_title (article, article_url)
-            print('В превью статьи найдены слова: ' + str(keywords & txt_set))
-        else:
-            find_text_result = find_article(article_url, keywords, headers)
-            if find_text_result:
-                print_article_title (article, article_url)
-                print(find_text_result)
+areas = ['1']
+search_txt = 'python django flask'
 
-def get_request(url, headers):
-    try:        
-        ret = requests.get(url, headers=headers)
-    except Exception as exc:
-        print('При запросе возникла ошибка: ' + str(exc))
-        print('Проверьте подключение к интернету.')
-        sys.exit()
-    soup = BeautifulSoup(ret.text, features='html.parser')
-    return soup
 
-def find_article(url, keywords, headers):
-    soup = get_request(url, headers)
-    article = soup.find(id='post-content-body')
-    txt_set = set(_.lstrip('*').lower() for _ in article.text.split())
-    if keywords & txt_set:
-        return 'В тексте статьи найдены слова: ' + str(keywords & txt_set)  
+class HH:
+    HOST = "https://spb.hh.ru/search/vacancy"
 
-def print_article_title (article, article_url):
-    datetime_published = article.find(class_='tm-article-snippet__datetime-published')
-    title_article = article.find(class_='tm-article-snippet__title tm-article-snippet__title_h2')
-    print(f"\n{datetime_published.contents[0].attrs['title'].partition(',')[0]}"
-        f" - {title_article.text} - {article_url}")
+    def __init__(
+            self,
+            vacancy_tag="serp-item serp-item_simple serp-item_link serp-item-redesign",
+            salary_tag="compensation-text--cCPBXayRjn5GuLFWhGTJ fake-magritte-primary-text--qmdoVdtVX3UWtBb3Q7Qj "
+                       "separate-line-on-xs--pwAEUI79GJbGDu97czVC",
+            employer_tag="vacancy-name--SYbxrgpHgHedVTkgI_cA serp-item__title-link serp-item__title-link_redesign",
+            address_tag="vacancy-serp__vacancy-address"
+    ):
+        self.headers = Headers(browser='chrome', os='win').generate()
+        self.vacancy_tag = vacancy_tag,
+        self.salary_tag = salary_tag
+        self.employer_tag = employer_tag
+        self.address_tag = address_tag
 
-if __name__ == '__main__':
-    KEYWORDS = {'дизайн', 'фото', 'web', 'python'}
-    HEADERS = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0'
-    }
-    URL = 'https://habr.com/ru/all/page'
-    page_start = ''
-    page_end = ''
-    while not page_start.isdigit():
-        page_start = input('Введите начальную старницу поиска (по умолчанию 1, "q - выход"): ')
-        if page_start == 'q':
-            sys.exit()
-        elif not page_start:
-            page_start = '1'
-    while not page_end.isdigit():
-        page_end = input('Введите конечную старницу поиска (по умолчанию равно начальной, "q - выход"): ')
-        if page_end == 'q':
-            sys.exit()
-        elif not page_end or int(page_end) < int(page_start):
-            page_end = page_start
-        elif page_end == 'q':
-            sys.exit()
-    for page_num in range(int(page_start), int(page_end) + 1):
-        find_preview(URL, page_num, KEYWORDS, HEADERS)
+    def get_vacancy(self, search_tags, areas=('1',)):
+        page = 0
+        vacancy_lst = []
+        while True:
+
+            params = {
+                'text': search_tags,
+                'area': areas,
+                'page': page,
+                'items_on_page': '20',
+            }
+            vacancy_html = requests.get(self.HOST, headers=self.headers, params=params).text
+            vacancy_list_pars_all = bs(vacancy_html, features='lxml').find_all(class_=self.vacancy_tag)
+            if vacancy_list_pars_all:
+                for vacancy in vacancy_list_pars_all:
+                    is_salary = vacancy.find('span', class_=self.salary_tag)
+                    salary = normalize('NFKD', is_salary.get_text()) if is_salary else ""
+                    employer = normalize('NFKD', vacancy.find(class_=self.employer_tag).text)
+                    address = normalize('NFKD', vacancy.find('span', {"data-qa": self.address_tag}).text)
+                    vacancy_lst.append(
+                        {'href': vacancy.find('a', target="_blank").attrs.get("href"),
+                         'employer': employer,
+                         'salary': salary,
+                         'address': address
+                         }
+                    )
+                page += 1
+            else:
+                return vacancy_lst
+
+
+hh = HH()
+vac_lst = hh.get_vacancy(search_txt, areas)
+with open("data_file.json", "w", encoding="utf-8") as f:
+    f.write(json.dumps(vac_lst))
+pprint(vac_lst)
